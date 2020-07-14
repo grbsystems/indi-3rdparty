@@ -1,3 +1,24 @@
+indi-avalon (1.10) buster; urgency=medium
+
+  * Tracking adjustment made permanent in StarGO
+
+ -- Wolfgang Reissenberger <sterne-jaeger@t-online.de>  Tue, 24 Mar 2020 20:43:46 +0100
+
+indi-avalon (1.9) buster; urgency=medium
+
+  * Bug fix, ignoring unsolicitated ge#
+  * Use INDI_ENABLED and INDI_DISABLED
+  * Types corrected to correct compiler warnings
+  * Tracking adjustment added
+
+-- Wolfgang Reissenberger <sterne-jaeger@t-online.de>  Sat, 13 Mar 2020 15:40:00 +0100
+
+indi-avalon (1.8) buster; urgency=medium
+
+  * Make mount command delay configurable
+
+ -- Wolfgang Reissenberger <sterne-jaeger@t-online.de>  Sat, 19 Oct 2019 22:16:11 +0200
+
 indi-avalon (1.7) stretch; urgency=medium
 
   * Retrying once reading the motor state to capture timeouts

@@ -138,6 +138,9 @@ class LX200StarGo : public LX200Telescope
         ISwitch SystemSpeedSlewS[4];
         ISwitchVectorProperty SystemSpeedSlewSP;
 
+        // tracking adjustment setting
+        INumberVectorProperty TrackingAdjustmentNP;
+        INumber TrackingAdjustment[1];
 
         // meridian flip
         ISwitchVectorProperty MeridianFlipModeSP;
@@ -147,6 +150,10 @@ class LX200StarGo : public LX200Telescope
         ISwitch MeridianFlipEnabledS[2];
         ISwitchVectorProperty MeridianFlipForcedSP;
         ISwitch MeridianFlipForcedS[2];
+
+        // configurable delay between two commands to avoid flooding StarGO
+        INumberVectorProperty MountRequestDelayNP;
+        INumber MountRequestDelayN[1];
 
         int controller_format { LX200_LONG_FORMAT };
 
@@ -169,6 +176,9 @@ class LX200StarGo : public LX200Telescope
         bool setKeyPadEnabled(bool enabled);
         bool getSystemSlewSpeedMode (int *index);
         bool setSystemSlewSpeedMode(int index);
+
+        struct timespec mount_request_delay = {0, 50000000L};
+        void setMountRequestDelay(int secs, long nanosecs) {mount_request_delay.tv_sec = secs; mount_request_delay.tv_nsec = nanosecs; };
 
         // autoguiding
         virtual bool setGuidingSpeeds(int raSpeed, int decSpeed);
@@ -207,9 +217,9 @@ class LX200StarGo : public LX200Telescope
         virtual bool setST4Enabled(bool enabled);
 
         // meridian flip
-
         virtual bool syncSideOfPier();
         bool checkLX200Format();
+
         // Guide Commands
         virtual IPState GuideNorth(uint32_t ms) override;
         virtual IPState GuideSouth(uint32_t ms) override;
@@ -238,6 +248,10 @@ class LX200StarGo : public LX200Telescope
         int MoveTo(int direction);
 
         bool setSlewMode(int slewMode);
+
+        // tracking adjustment
+        bool setTrackingAdjustment(double adjustRA);
+        bool getTrackingAdjustment(double *valueRA);
 
 };
 inline bool LX200StarGo::sendQuery(const char* cmd, char* response, int wait)
