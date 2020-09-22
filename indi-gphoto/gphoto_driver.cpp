@@ -483,6 +483,11 @@ static double *parse_shutterspeed(gphoto_driver *gphoto, gphoto_widget *widget)
         }
         else if ((val = strtod(widget->choices[i], nullptr)))
         {
+            // Fuji returns long exposure values ( > 60s) with m postfix
+            if (widget->choices[i][strlen(widget->choices[i]) - 1] == 'm')
+            {
+                val = val * 60;
+            }
             exposure[i] = val;
             DEBUGFDEVICE(device, INDI::Logger::DBG_DEBUG, "exposure[%d]=%g seconds", i, exposure[i]);
         }
@@ -854,12 +859,11 @@ static int download_image(gphoto_driver *gphoto, CameraFilePath *fn, int fd)
     // Extract temperature(s) from gphoto image via libraw
     const char *imgData;
     unsigned long imgSize;
-    int rc;
     result = gp_file_get_data_and_size(gphoto->camerafile, &imgData, &imgSize);
     if (result == GP_OK)
     {
         LibRaw lib_raw;
-        rc = lib_raw.open_buffer((void *)imgData, imgSize);
+        int rc = lib_raw.open_buffer((void *)imgData, imgSize);
         if (rc != LIBRAW_SUCCESS)
         {
             DEBUGFDEVICE(device, INDI::Logger::DBG_DEBUG,
@@ -871,6 +875,36 @@ static int download_image(gphoto_driver *gphoto, CameraFilePath *fn, int fd)
                 gphoto->last_sensor_temp = lib_raw.imgdata.other.SensorTemperature;
             else if (lib_raw.imgdata.other.CameraTemperature > -273.15f)
                 gphoto->last_sensor_temp = lib_raw.imgdata.other.CameraTemperature;
+        }
+        lib_raw.recycle();
+        if (fd >= 0)
+        {
+            // The gphoto documentation says I don't need to do this,
+            // but reading the source of gp_file_get_data_and_size says otherwise. :(
+            free((void *)imgData);
+            imgData = nullptr;
+        }
+    }
+#elif defined(LIBRAW_CAMERA_TEMPERATURE2) && defined(LIBRAW_SENSOR_TEMPERATURE2)
+    // Extract temperature(s) from gphoto image via libraw
+    const char *imgData;
+    unsigned long imgSize;
+    result = gp_file_get_data_and_size(gphoto->camerafile, &imgData, &imgSize);
+    if (result == GP_OK)
+    {
+        LibRaw lib_raw;
+        int rc = lib_raw.open_buffer((void *)imgData, imgSize);
+        if (rc != LIBRAW_SUCCESS)
+        {
+            DEBUGFDEVICE(device, INDI::Logger::DBG_DEBUG,
+                         "Cannot decode (%s)", libraw_strerror(rc));
+        }
+        else
+        {
+            if (lib_raw.imgdata.makernotes.common.SensorTemperature > -273.15f)
+                gphoto->last_sensor_temp = lib_raw.imgdata.makernotes.common.SensorTemperature;
+            else if (lib_raw.imgdata.makernotes.common.CameraTemperature > -273.15f)
+                gphoto->last_sensor_temp = lib_raw.imgdata.makernotes.common.CameraTemperature;
         }
         lib_raw.recycle();
         if (fd >= 0)
