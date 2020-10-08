@@ -1,13 +1,17 @@
-Name: indi-ahp-correlator
+Name: libahp_xc
 Version: 1.8.7.git
 Release: %(date -u +%%Y%%m%%d%%H%%M%%S)%{?dist}
 Summary: Instrument Neutral Distributed Interface 3rd party drivers
 
-License: LGPLv2
+License: LGPLv3
 # See COPYRIGHT file for a description of the licenses and files covered
 
 URL: https://indilib.org
 Source0: https://github.com/indilib/indi-3rdparty/archive/master.tar.gz
+
+%global debug_package %{nil}
+%define __find_requires %{nil}
+
 
 BuildRequires: cmake
 BuildRequires: libfli-devel
@@ -30,7 +34,6 @@ BuildRequires: gpsd-devel
 BuildRequires: libdc1394-devel
 BuildRequires: boost-devel
 BuildRequires: boost-regex
-BuildRequires: libahp_xc
 
 BuildRequires: gmock
 
@@ -42,6 +45,8 @@ BuildRequires: pkgconfig(libjpeg)
 BuildRequires: pkgconfig(libusb-1.0)
 BuildRequires: pkgconfig(zlib)
 
+Provides: libahp_xc.so()(64bit)
+Provides: libahp_xc.so
 
 %description
 INDI is a distributed control protocol designed to operate
@@ -59,17 +64,19 @@ data acquisition, monitoring, and a lot more. This is a 3rd party driver.
 # Disable LTO
 %define _lto_cflags %{nil}
 
-cd indi-ahp-correlator
-%cmake -DINDI_DATA_DIR=/usr/share/indi .
+cd libahp_xc
+%cmake .
 make VERBOSE=1 %{?_smp_mflags} -j4
 
 %install
-cd indi-ahp-correlator
+cd libahp_xc
+find %buildroot -type f \( -name '*.so' -o -name '*.so.*' \) -exec chmod 755 {} +
 make DESTDIR=%{buildroot} install
 
 %files
-%{_bindir}/*
-%{_datadir}/indi
+%{_libdir}/*
+%{_includedir}/ahp
+
 
 %changelog
 * Sun Jul 19 2020 Jim Howard <jh.xsnrg+fedora@gmail.com> 1.8.7.git-1
